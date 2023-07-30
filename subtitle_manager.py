@@ -35,13 +35,14 @@ from pathlib import Path
 API_KEY_TMDB = '12345678789' # API Key from TMDB when search for ID from tv shows
 API_KEY_OPENSUBTITLES = '987654321' # API Key to download from opensubtitles.com
 USERNAME_OPENSUBTITLES = 'TesteTeste' # Username to authenticate to opensubtitles.com (the same used in browser)
-PASSWORD_OPENSUBTITLES = 'Teste123' # Password to authenticate to opensubtitle.coms (the same used in browser)
+PASSWORD_OPENSUBTITLES = 'Teste123' # Password to authenticate to opensubtitle.com (the same used in browser)
 SCRIPT_PATH = os.path.realpath(__file__) # Script path to log
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH) # Script directory to log
 SUBTITLE_LANGUAGE = 'pt-br' # Language to search in opensubtitles.com
 SUBTITLE_KNOWN_NAMES = ['portuguese', 'portugues', 'pt-br', 'br'] # Known names from the language that is searched
 SUBTITLE_END_FILEPATH_PATTERN = '.pt.srt' # End filepath name, for example 'subtitle_123.pt.srt', '.pt.srt' is the pattern
 ALWAYS_DOWNLOAD_SUBTITLE = False  # If True then always will download subtitles in the language target, even if already exist one
+WEBHOOK_DISCORD = "api/webhooks/123/123456789" # If not filled or equal -1, will ignore Discord notifications, Just paste after https://discord.com/
 
 # EMBED CONFIGURATION
 # The configuration below is just to metadata usage in mkv files
@@ -809,7 +810,10 @@ def upgrade_subtitle():
 
 def notify_download_subtitle_discord():
     # Construct the request parameters and headers
-    url = f'/api/webhooks/1130187988907856014/ToG1Uc6sezDYq_SckXBo9-dQLlIYHNSR6Do-Jn0V7EiMAdHlZLEd7EHbjj14vnGTCTsq'
+    url = WEBHOOK_DISCORD
+
+    if url == "" or url == -1:
+        return
     
     headers = {
         'Content-Type': 'application/json',

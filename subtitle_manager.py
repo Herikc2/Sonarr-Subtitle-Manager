@@ -35,14 +35,14 @@ from pathlib import Path
 API_KEY_TMDB = '12345678789' # API Key from TMDB when search for ID from tv shows
 API_KEY_OPENSUBTITLES = '987654321' # API Key to download from opensubtitles.com
 USERNAME_OPENSUBTITLES = 'TesteTeste' # Username to authenticate to opensubtitles.com (the same used in browser)
-PASSWORD_OPENSUBTITLES = 'Teste123' # Password to authenticate to opensubtitle.com (the same used in browser)
+PASSWORD_OPENSUBTITLES = 'Teste123' # Password to authenticate to opensubtitle.coms (the same used in browser)
 SCRIPT_PATH = os.path.realpath(__file__) # Script path to log
 SCRIPT_DIR = os.path.dirname(SCRIPT_PATH) # Script directory to log
 SUBTITLE_LANGUAGE = 'pt-br' # Language to search in opensubtitles.com
 SUBTITLE_KNOWN_NAMES = ['portuguese', 'portugues', 'pt-br', 'br'] # Known names from the language that is searched
 SUBTITLE_END_FILEPATH_PATTERN = '.pt.srt' # End filepath name, for example 'subtitle_123.pt.srt', '.pt.srt' is the pattern
 ALWAYS_DOWNLOAD_SUBTITLE = False  # If True then always will download subtitles in the language target, even if already exist one
-WEBHOOK_DISCORD = "api/webhooks/123/123456789" # If not filled or equal -1, will ignore Discord notifications, Just paste after https://discord.com/
+WEBHOOK_DISCORD = "/api/webhooks/123/123456789abc" # If not filled or equal -1, will ignore Discord notifications, Just paste after https://discord.com/
 
 # EMBED CONFIGURATION
 # The configuration below is just to metadata usage in mkv files
@@ -767,7 +767,7 @@ def download_subtitle(action_type):
                         embed_subtitle(envs['sonarr_episodefile_path'], subtitle_filepath)
 
                         # Notify discord about subtitle download
-                        notify_download_subtitle_discord()
+                        notify_download_subtitle_discord(envs['sonarr_episodefile_path'], envs['sonarr_episodefile_seasonnumber'], envs['sonarr_episodefile_episodenumbers'], RELEASE_ABSOLUTE_EPISODE_NUMBERS)
                     else:
                         logger_.error(f'Failed to get subtitle download link')
 
@@ -788,7 +788,8 @@ def download_subtitle(action_type):
         delete_external_subtitles(sonarr_episodefile_path)
 
     if check_subtitles_method== 'mkv':
-        set_default_tracks(envs['sonarr_episodefile_path'])
+        sonarr_episodefile_path = envs['sonarr_episodefile_path']
+        set_default_tracks(sonarr_episodefile_path)
         delete_external_subtitles(sonarr_episodefile_path)
 
 def delete_subtitle():
@@ -808,13 +809,11 @@ def upgrade_subtitle():
     delete_subtitle()
     download_subtitle('Upgrade')
 
-def notify_download_subtitle_discord():
-    # Construct the request parameters and headers
-    url = WEBHOOK_DISCORD
-
-    if url == "" or url == -1:
+def notify_download_subtitle_discord(sonarr_episodefile_path, sonarr_episodefile_seasonnumber, sonarr_episodefile_episodenumbers, release_absolute_episode_numbers):
+    if WEBHOOK_DISCORD == "" or WEBHOOK_DISCORD == -1:
         return
     
+    # Construct the request parameters and headers
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -830,22 +829,22 @@ def notify_download_subtitle_discord():
                 "fields": [
                     {
                         "name": "Title",
-                        "value": envs['sonarr_episodefile_path'].split('/')[-1].split('[')[0].strip(),
+                        "value": sonarr_episodefile_path.split('/')[-1].split('[')[0].strip(),
                         "inline": False
                     },
                     {
                         "name": "Season",
-                        "value": envs['sonarr_episodefile_seasonnumber'],
+                        "value": sonarr_episodefile_seasonnumber,
                         "inline": True
                     },   
                     {
                         "name": "Episode",
-                        "value": envs['sonarr_episodefile_episodenumbers'],
+                        "value": sonarr_episodefile_episodenumbers,
                         "inline": True
                     },                                                
                     {
                         "name": "Absolute Episode",
-                        "value": RELEASE_ABSOLUTE_EPISODE_NUMBERS,
+                        "value": release_absolute_episode_numbers,
                         "inline": False
                     }          
                 ]
@@ -858,7 +857,7 @@ def notify_download_subtitle_discord():
         conn = http.client.HTTPSConnection('discord.com')
 
         # Send the GET request
-        conn.request('POST', url, body = json.dumps(body), headers=headers)
+        conn.request('POST', WEBHOOK_DISCORD, body = json.dumps(body), headers=headers)
 
         # Get the response from the server
         response = conn.getresponse()
@@ -876,7 +875,7 @@ def notify_download_subtitle_discord():
             conn = http.client.HTTPSConnection('api.opensubtitles.com')
             conn.request('POST', redirect_location, headers=headers)
         else:
-            logger_.error(f"Request failed with status code: {response.status}")
+            logger_.error(f"Notify Discord, request failed with status code: {response.status}")
         # Close the connection
         conn.close()
 

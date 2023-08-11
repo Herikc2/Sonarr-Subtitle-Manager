@@ -1,4 +1,9 @@
 Versions/*
 log.txt
+config.txt
 *.mkv
 *.srt
+*teste*
+*.ass
+*.srt
+*.csv

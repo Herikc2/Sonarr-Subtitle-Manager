@@ -42,7 +42,7 @@ SUBTITLE_LANGUAGE = 'pt-br' # Language to search in opensubtitles.com
 SUBTITLE_KNOWN_NAMES = ['portuguese', 'portugues', 'pt-br', 'br'] # Known names from the language that is searched
 SUBTITLE_END_FILEPATH_PATTERN = '.pt.srt' # End filepath name, for example 'subtitle_123.pt.srt', '.pt.srt' is the pattern
 ALWAYS_DOWNLOAD_SUBTITLE = False  # If True then always will download subtitles in the language target, even if already exist one
-WEBHOOK_DISCORD = "/api/webhooks/123/123456789abc" # If not filled or equal -1, will ignore Discord notifications, Just paste after https://discord.com/
+WEBHOOK_DISCORD = "/api/webhooks/123/123456789" # If not filled or equal -1, will ignore Discord notifications, Just paste after https://discord.com/
 
 # EMBED CONFIGURATION
 # The configuration below is just to metadata usage in mkv files
@@ -461,7 +461,8 @@ def embed_subtitle(video_path, subtitle_path = '', delete_old_subtitle = True):
         video_path,
         "--language", f"0:{EMBED_SUBTITLE_CODE}",  # Language code
         "--track-name", f"0:{EMBED_SUBTITLE_NAME}",  # Track name
-        '--forced-track', '0:1',   # Set track as forced subtitle
+        '--default-track-flag', '0:yes',   # Set track as default subtitle
+        '--forced-display-flag', '0:no',   # Set track as not forced subtitle
         "--sub-charset", "0:UTF-8",
         subtitle_path
     ]
@@ -497,7 +498,7 @@ def set_default_tracks(video_path):
 
     # Set variavles
     default_tracks_id = []
-    forced_tracks_id = []
+    remove_forced_tracks_id = []
     remove_default_tracks_id = []
     is_audio_set = False
     is_subtitle_set = False
@@ -524,6 +525,7 @@ def set_default_tracks(video_path):
                 remove_default_tracks_id.append(item["id"])
         # If the track is subtitle check if it is the target language and set as default
         elif item["type"] == "subtitles":
+            remove_forced_tracks_id.append(item["id"])
             if properties["language"] in EMBED_SUBTITLE_TRACKS:               
                 track_name = (
                     properties["track_name"]
@@ -534,23 +536,24 @@ def set_default_tracks(video_path):
                     itemId = item['id']
                     logger_.info(f"Subtitle track identified with id: {itemId}")
                     default_tracks_id.append(itemId)
-                    forced_tracks_id.append(itemId)
                     is_subtitle_set = True
                 else:
                     remove_default_tracks_id.append(item["id"])
+            else:
+                remove_default_tracks_id.append(item["id"])
 
     # Build default track variable
     default_tracks = " ".join(
         [f"--default-track-flag {x}:yes" for x in default_tracks_id]
     )
-    logger_.info(f"Default tracks: {default_tracks}")
+    logger_.info(f"Add default tracks: {default_tracks}")
     default_tracks = shlex.split(default_tracks)
 
     # Build forced track variable
     forced_tracks = " ".join(
-        [f"--forced-display-flag {x}:yes" for x in forced_tracks_id]
+        [f"--forced-display-flag {x}:no" for x in remove_forced_tracks_id]
     )
-    logger_.info(f"Forced tracks: {forced_tracks}")
+    logger_.info(f"Remove forced tracks: {forced_tracks}")
     forced_tracks = shlex.split(forced_tracks)
 
     # Build not default track variable

@@ -36,8 +36,6 @@ API_KEY_TMDB = '12345678789' # API Key from TMDB when search for ID from tv show
 API_KEY_OPENSUBTITLES = '987654321' # API Key to download from opensubtitles.com
 USERNAME_OPENSUBTITLES = 'TesteTeste' # Username to authenticate to opensubtitles.com (the same used in browser)
 PASSWORD_OPENSUBTITLES = 'Teste123' # Password to authenticate to opensubtitle.coms (the same used in browser)
-SCRIPT_PATH = os.path.realpath(__file__) # Script path to log
-SCRIPT_DIR = os.path.dirname(SCRIPT_PATH) # Script directory to log
 SUBTITLE_LANGUAGE = 'pt-br' # Language to search in opensubtitles.com
 SUBTITLE_KNOWN_NAMES = ['portuguese', 'portugues', 'pt-br', 'br'] # Known names from the language that is searched
 SUBTITLE_END_FILEPATH_PATTERN = '.pt.srt' # End filepath name, for example 'subtitle_123.pt.srt', '.pt.srt' is the pattern
@@ -54,7 +52,14 @@ EXECUTION_TYPE = 'remote' # 'remote' is to execute from Sonarr, 'local' is to ex
 
 #############################################################################################################################################################################
 
-envs = {} # Do not change
+#############################################################
+################## CHANGE BY YOUR OWN RISK ##################
+#############################################################
+
+envs = {}
+
+SCRIPT_PATH = os.path.realpath(__file__) # Script path to log
+SCRIPT_DIR = os.path.dirname(SCRIPT_PATH) # Script directory to log
 
 # Set log format and file
 log_file_path = f'{SCRIPT_DIR}/log.txt'
@@ -500,6 +505,7 @@ def set_default_tracks(video_path):
     default_tracks_id = []
     remove_forced_tracks_id = []
     remove_default_tracks_id = []
+    subtitles_fix_name = []
     is_audio_set = False
     is_subtitle_set = False
 
@@ -532,8 +538,11 @@ def set_default_tracks(video_path):
                     if "track_name" in properties.keys()
                     else ""
                 )
+
+                itemId = item['id']
+                subtitles_fix_name.append(f'--track-name {itemId}:"{EMBED_SUBTITLE_NAME}" --language {itemId}:{EMBED_SUBTITLE_CODE}')
+
                 if check_track_name(track_name) and not is_subtitle_set:
-                    itemId = item['id']
                     logger_.info(f"Subtitle track identified with id: {itemId}")
                     default_tracks_id.append(itemId)
                     is_subtitle_set = True
@@ -556,6 +565,12 @@ def set_default_tracks(video_path):
     logger_.info(f"Remove forced tracks: {forced_tracks}")
     forced_tracks = shlex.split(forced_tracks)
 
+    subtitles_fix_name_tracks = " ".join(
+        [f"{x} " for x in subtitles_fix_name]
+    )
+    logger_.info(f"Fix track names and language code: {subtitles_fix_name_tracks}")
+    subtitles_fix_name_tracks = shlex.split(subtitles_fix_name_tracks)
+
     # Build not default track variable
     remove_default_tracks = " ".join(
         [f"--default-track-flag {x}:no" for x in remove_default_tracks_id]
@@ -568,7 +583,7 @@ def set_default_tracks(video_path):
         str(MKVMERGE_PATH),
         "-o",
         str(anime).replace(".mkv", "_temp.mkv")
-    ] + default_tracks + remove_default_tracks + forced_tracks
+    ] + default_tracks + remove_default_tracks + forced_tracks + subtitles_fix_name_tracks
     logger_.info(f"Full command to mkvmerge: {set_tracks_flags}")
     set_tracks_flags.append(str(anime))
 

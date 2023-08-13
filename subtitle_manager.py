@@ -46,8 +46,8 @@ WEBHOOK_DISCORD = "/api/webhooks/123/123456789" # If not filled or equal -1, wil
 
 # EMBED CONFIGURATION
 # The configuration below is just to metadata usage in mkv files
-EMBED_SUBTITLE_NAME = 'Portugues(Brasil)' # The name of track
-EMBED_SUBTITLE_CODE = 'pt-br' # The international code of languages
+EMBED_SUBTITLE_NAME = 'Portuguese (Brazil)' # The name of track
+EMBED_SUBTITLE_CODE = 'pt-BR' # The international code of languages
 MKVMERGE_PATH = 'mkvmerge' # Path/command to execute mkvmerge
 EMBED_SUBTITLE_TRACKS = ["pt", "pt-br", "por", "portuguese", "brazilian", "ptbr", "pob", "portugues", "português", "br"] # Known names from the language that is searched in embed subtitles
 EXECUTION_TYPE = 'remote' # 'remote' is to execute from Sonarr, 'local' is to execute locally without use sonarr the code
